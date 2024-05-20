@@ -43318,8 +43318,293 @@ def dayBookReport(request):
                     'moneyOut':mOut
                 }
                 reportData.append(details)
-               
+                
+                
+    est = Estimate.objects.filter(company=comp_details, estimate_date = currentDate)
+    if est:
+        for e in est:
+            partyName = e.customer.first_name +" "+e.customer.last_name
+            date = e.estimate_date
+            ref = e.estimate_number
+            type = 'Estimate'
+            total = e.grand_total
+            mIn = e.grand_total
+            mOut = 0
+            totMoneyIn += float(e.grand_total)
+
+            details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+            reportData.append(details)
+            
+    pOrder = PurchaseOrder.objects.filter(company = comp_details, purchase_order_date = currentDate)
+    if pOrder:
+        for p in pOrder:
+                partyName =p.vendor.first_name +" "+p.vendor.last_name
+                date = p.purchase_order_date
+                ref = p.sales_order_number
+                type = 'PurchaseOrder'
+                total = p.grand_total
+                mOut = p.grand_total
+                mIn = 0
+                totMoneyOut += float(p.grand_total)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+                
+    exp = Expense.objects.filter(company = comp_details, date = currentDate)
+    if exp:
+        for e in exp:
+                partyName =e.vendor_name 
+                date = e.date
+                ref = e.expense_number
+                type = 'Expense'
+                total = e.amount
+                mOut = e.amount
+                mIn = 0
+                totMoneyOut += float(e.amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+                
+    rec_expense = Recurring_Expense.objects.filter(company = comp_details, exp_date = currentDate)
+    if rec_expense:
+        for rec in rec_expense:
+                partyName =rec.vendor.first_name +" "+rec.vendor.last_name
+                date = rec.exp_date
+                ref = rec.Expense_Number
+                type = 'Recurring Expense'
+                total = rec.amount
+                mOut = rec.amount
+                mIn = 0
+                totMoneyOut += float(rec.amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+                
+    waybill = EwayBill.objects.filter(company=comp_details, start_date = currentDate)
+    if waybill:
+        for bill in waybill:
+            partyName = bill.customer.first_name +" "+bill.customer.last_name
+            date = bill.start_date
+            ref = bill.eway_bill_number
+            type = 'EwayBill'
+            total = bill.grandtotal
+            mIn = bill.grandtotal
+            mOut = 0
+            totMoneyIn += float(bill.grandtotal)
+
+            details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+            reportData.append(details)
     
+    
+    sDetails = SalaryDetails.objects.filter(company = comp_details, salary_date = currentDate)
+    if sDetails:
+        for s in sDetails:
+                partyName =s.employee.first_name +" "+s.employee.last_name
+                date = s.salary_date
+                ref = ''
+                type = 'SalaryDetails'
+                total = s.total_amount
+                mOut = s.total_amount
+                mIn = 0
+                totMoneyOut += float(s.total_amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details) 
+     
+                
+    loan_acc = loan_account.objects.filter(company = comp_details, loan_date = currentDate)
+    if loan_acc:
+        for loan in loan_acc:
+                partyName = loan.bank_holder.customer_name
+                date = loan.loan_date
+                ref = ''
+                type = 'Loan Account'
+                total = loan.loan_amount
+                mIn = loan.loan_amount
+                mOut = 0
+                totMoneyIn += float(loan.loan_amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+  
+    loan_acc = loan_account.objects.filter(company = comp_details,loan_date = currentDate)            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date = currentDate, type='EMI paid')           
+    if repayment_details:            
+        for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                ref = ''
+                type = r.type
+                total = r.total_amount
+                mOut = r.total_amount
+                mIn = 0
+                totMoneyOut += float(r.total_amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+                
+                
+    loan_acc = loan_account.objects.filter(company = comp_details,loan_date = currentDate)            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date = currentDate,  type='Additional Loan')           
+    if repayment_details:            
+        for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                ref = ''
+                type = r.type
+                total = r.total_amount
+                mIn = r.total_amount
+                mOut = 0
+                totMoneyIn += float(r.total_amount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+                
+                
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate = currentDate)
+    if emploan:
+        for emp in emploan:
+                partyName =emp.Employee.first_name +" "+emp.Employee.last_name
+                date = emp.Loandate
+                ref = ''
+                type = 'EmployeeLoan'
+                total = emp.LoanAmount
+                mOut = emp.LoanAmount
+                mIn = 0
+                totMoneyOut += float(emp.LoanAmount)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details) 
+    
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate = currentDate)           
+    repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date = currentDate,  particular='EMI paid')           
+    if repay:            
+        for r in repay:
+                partyName =r.employee.first_name +" "+r.employee.last_name
+                date = r.payment_date
+                ref = ''
+                type = r.particular
+                total = r.total_payment
+                mIn = r.total_payment
+                mOut = 0
+                totMoneyIn += float(r.total_payment)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)
+    
+        
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate = currentDate)           
+    repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date = currentDate,  particular='Additional Loan issued')           
+    if repay:            
+        for r in repay:  
+                partyName =r.employee.first_name +" "+r.employee.last_name
+                date = r.payment_date
+                ref = ''
+                type = r.particular
+                total = r.total_payment
+                mIn = 0
+                mOut = r.total_payment
+                totMoneyOut += float(r.total_payment)
+
+                details = {
+                    'date': date,
+                    'partyName': partyName,
+                    'ref':ref,
+                    'type':type,
+                    'total':total,
+                    'moneyIn':mIn,
+                    'moneyOut':mOut
+                }
+                reportData.append(details)        
+                  
     return render(request, 'zohomodules/Reports/Daybook.html', {               
                 'allmodules': allmodules,
                 'log_details': log_details,              
@@ -43333,8 +43618,7 @@ def dayBookReport(request):
                 
             })
     
-    
-    
+  
 def dayBookReportCustomized(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -43596,8 +43880,289 @@ def dayBookReportCustomized(request):
                     'moneyOut':mOut
                 }
                 reportData.append(details)
-           
+                
+    est = Estimate.objects.filter(company=comp_details, estimate_date__range = [startDate, endDate])
+    if est:
+        for e in est:
+            partyName = e.customer.first_name +" "+e.customer.last_name
+            date = e.estimate_date
+            ref = e.estimate_number
+            type = 'Estimate'
+            total = e.grand_total
+            mIn = e.grand_total
+            mOut = 0
+            totMoneyIn += float(e.grand_total)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+    pOrder = PurchaseOrder.objects.filter(company = comp_details, purchase_order_date__range = [startDate, endDate])
+    if pOrder:
+        for p in pOrder:
+            partyName =p.vendor.first_name +" "+p.vendor.last_name
+            date = p.purchase_order_date
+            ref = p.sales_order_number
+            type = 'PurchaseOrder'
+            total = p.grand_total
+            mOut = p.grand_total
+            mIn = 0
+            totMoneyOut += float(p.grand_total)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+    exp = Expense.objects.filter(company = comp_details, date__range = [startDate, endDate])
+    if exp:
+        for e in exp:
+            partyName =e.vendor_name 
+            date = e.date
+            ref = e.expense_number
+            type = 'Expense'
+            total = e.amount
+            mOut = e.amount
+            mIn = 0
+            totMoneyOut += float(e.amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+    rec_expense = Recurring_Expense.objects.filter(company = comp_details, exp_date__range = [startDate, endDate])
+    if rec_expense:
+        for rec in rec_expense:
+            partyName =rec.vendor.first_name +" "+rec.vendor.last_name
+            date = rec.exp_date
+            ref = rec.Expense_Number
+            type = 'Recurring Expense'
+            total = rec.amount
+            mOut = rec.amount
+            mIn = 0
+            totMoneyOut += float(rec.amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+    waybill = EwayBill.objects.filter(company=comp_details, start_date__range = [startDate, endDate])
+    if waybill:
+        for bill in waybill:
+            partyName = bill.customer.first_name +" "+bill.customer.last_name
+            date = bill.start_date
+            ref = bill.eway_bill_number
+            type = 'EwayBill'
+            total = bill.grandtotal
+            mIn = bill.grandtotal
+            mOut = 0
+            totMoneyIn += float(bill.grandtotal)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
     
+    sDetails = SalaryDetails.objects.filter(company = comp_details, salary_date__range = [startDate, endDate])
+    if sDetails:
+        for s in sDetails:
+            partyName =s.employee.first_name +" "+s.employee.last_name
+            date = s.salary_date
+            ref = ''
+            type = 'SalaryDetails'
+            total = s.total_amount
+            mOut = s.total_amount
+            mIn = 0
+            totMoneyOut += float(s.total_amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+    loan_acc = loan_account.objects.filter(company = comp_details, loan_date__range = [startDate, endDate])
+    if loan_acc:
+        for loan in loan_acc:
+            partyName = loan.bank_holder.customer_name
+            date = loan.loan_date
+            ref = ''
+            type = 'Loan Account'
+            total = loan.loan_amount
+            mIn = loan.loan_amount
+            mOut = 0
+            totMoneyIn += float(loan.loan_amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+
+    loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate], type='EMI paid')           
+    if repayment_details:            
+        for r in repayment_details:
+            partyName =r.loan.bank_holder.customer_name
+            date = r.payment_date
+            ref = ''
+            type = r.type
+            total = r.total_amount
+            mOut = r.total_amount
+            mIn = 0
+            totMoneyOut += float(r.total_amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+            
+            
+    loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate], type='Additional Loan')           
+    if repayment_details:            
+        for r in repayment_details:
+            partyName =r.loan.bank_holder.customer_name
+            date = r.payment_date
+            ref = ''
+            type = r.type
+            total = r.total_amount
+            mIn = r.total_amount
+            mOut = 0
+            totMoneyIn += float(r.total_amount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details) 
+    
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])
+    if emploan:
+        for emp in emploan:
+            partyName =emp.Employee.first_name +" "+emp.Employee.last_name
+            date = emp.Loandate
+            ref = ''
+            type = 'EmployeeLoan'
+            total = emp.LoanAmount
+            mOut = emp.LoanAmount
+            mIn = 0
+            totMoneyOut += float(emp.LoanAmount)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details) 
+
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])           
+    repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date__range = [startDate, endDate],  particular='EMI paid')           
+    if repay:            
+        for r in repay:
+            partyName =r.employee.first_name +" "+r.employee.last_name
+            date = r.payment_date
+            ref = ''
+            type = r.particular
+            total = r.total_payment
+            mIn = r.total_payment
+            mOut = 0
+            totMoneyIn += float(r.total_payment)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)
+
+    
+    emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])           
+    repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date__range = [startDate, endDate],  particular='Additional Loan issued')           
+    if repay:            
+        for r in repay:  
+            partyName =r.employee.first_name +" "+r.employee.last_name
+            date = r.payment_date
+            ref = ''
+            type = r.particular
+            total = r.total_payment
+            mIn = 0
+            mOut = r.total_payment
+            totMoneyOut += float(r.total_payment)
+
+            details = {
+                'date': date,
+                'partyName': partyName,
+                'ref':ref,
+                'type':type,
+                'total':total,
+                'moneyIn':mIn,
+                'moneyOut':mOut
+            }
+            reportData.append(details)     
+  
     return render(request, 'zohomodules/Reports/Daybook.html', {               
                 'allmodules': allmodules,
                 'log_details': log_details,              
@@ -43610,6 +44175,7 @@ def dayBookReportCustomized(request):
                 'currentDate':None
                 
             })
+    
 
 
 def shareDayBookReportToEmail(request):
@@ -43873,6 +44439,290 @@ def shareDayBookReportToEmail(request):
                             'moneyOut': mOut
                         }
                         reportData.append(details)
+                
+                est = Estimate.objects.filter(company=comp_details, estimate_date__range = [startDate, endDate])
+                if est:
+                    for e in est:
+                        partyName = e.customer.first_name +" "+e.customer.last_name
+                        date = e.estimate_date
+                        ref = e.estimate_number
+                        type = 'Estimate'
+                        total = e.grand_total
+                        mIn = e.grand_total
+                        mOut = 0
+                        totMoneyIn += float(e.grand_total)
+
+                        details = {
+                              'date': date,
+                              'partyName': partyName,
+                              'ref':ref,
+                              'type':type,
+                              'total':total,
+                              'moneyIn':mIn,
+                              'moneyOut':mOut
+                        }
+                        reportData.append(details) 
+                        
+                pOrder = PurchaseOrder.objects.filter(company = comp_details, purchase_order_date__range = [startDate, endDate])
+                if pOrder:
+                    for p in pOrder:
+                        partyName =p.vendor.first_name +" "+p.vendor.last_name
+                        date = p.purchase_order_date
+                        ref = p.sales_order_number
+                        type = 'PurchaseOrder'
+                        total = p.grand_total
+                        mOut = p.grand_total
+                        mIn = 0
+                        totMoneyOut += float(p.grand_total)
+            
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)        
+                        
+                exp = Expense.objects.filter(company = comp_details, date__range = [startDate, endDate])
+                if exp:
+                    for e in exp:
+                        partyName =e.vendor_name 
+                        date = e.date
+                        ref = e.expense_number
+                        type = 'Expense'
+                        total = e.amount
+                        mOut = e.amount
+                        mIn = 0
+                        totMoneyOut += float(e.amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+                        
+                rec_expense = Recurring_Expense.objects.filter(company = comp_details, exp_date__range = [startDate, endDate])
+                if rec_expense:
+                    for rec in rec_expense:
+                        partyName =rec.vendor.first_name +" "+rec.vendor.last_name
+                        date = rec.exp_date
+                        ref = rec.Expense_Number
+                        type = 'Recurring Expense'
+                        total = rec.amount
+                        mOut = rec.amount
+                        mIn = 0
+                        totMoneyOut += float(rec.amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+            
+                waybill = EwayBill.objects.filter(company=comp_details, start_date__range = [startDate, endDate])
+                if waybill:
+                    for bill in waybill:
+                        partyName = bill.customer.first_name +" "+bill.customer.last_name
+                        date = bill.start_date
+                        ref = bill.eway_bill_number
+                        type = 'EwayBill'
+                        total = bill.grandtotal
+                        mIn = bill.grandtotal
+                        mOut = 0
+                        totMoneyIn += float(bill.grandtotal)
+
+                        details = {
+                           'date': date,
+                           'partyName': partyName,
+                           'ref':ref,
+                           'type':type,
+                           'total':total,
+                           'moneyIn':mIn,
+                           'moneyOut':mOut
+                        }
+                        reportData.append(details)        
+                
+                sDetails = SalaryDetails.objects.filter(company = comp_details, salary_date__range = [startDate, endDate])
+                if sDetails:
+                    for s in sDetails:
+                        partyName =s.employee.first_name +" "+s.employee.last_name
+                        date = s.salary_date
+                        ref = ''
+                        type = 'SalaryDetails'
+                        total = s.total_amount
+                        mOut = s.total_amount
+                        mIn = 0
+                        totMoneyOut += float(s.total_amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details) 
+                        
+                loan_acc = loan_account.objects.filter(company = comp_details, loan_date__range = [startDate, endDate])
+                if loan_acc:
+                    for loan in loan_acc:
+                        partyName = loan.bank_holder.customer_name
+                        date = loan.loan_date
+                        ref = ''
+                        type = 'Loan Account'
+                        total = loan.loan_amount
+                        mIn = loan.loan_amount
+                        mOut = 0
+                        totMoneyIn += float(loan.loan_amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+
+                loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+                repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate], type='EMI paid')           
+                if repayment_details:            
+                    for r in repayment_details:
+                        partyName =r.loan.bank_holder.customer_name
+                        date = r.payment_date
+                        ref = ''
+                        type = r.type
+                        total = r.total_amount
+                        mOut = r.total_amount
+                        mIn = 0
+                        totMoneyOut += float(r.total_amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+            
+            
+                loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+                repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate],  type='Additional Loan')           
+                if repayment_details:            
+                    for r in repayment_details:
+                        partyName =r.loan.bank_holder.customer_name
+                        date = r.payment_date
+                        ref = ''
+                        type = r.type
+                        total = r.total_amount
+                        mIn = r.total_amount
+                        mOut = 0
+                        totMoneyIn += float(r.total_amount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+                        
+                emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])
+                if emploan:
+                    for emp in emploan:
+                        partyName =emp.Employee.first_name +" "+emp.Employee.last_name
+                        date = emp.Loandate
+                        ref = ''
+                        type = 'EmployeeLoan'
+                        total = emp.LoanAmount
+                        mOut = emp.LoanAmount
+                        mIn = 0
+                        totMoneyOut += float(emp.LoanAmount)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details) 
+
+                emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])           
+                repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date__range = [startDate, endDate],  particular='EMI paid')           
+                if repay:            
+                    for r in repay:
+                        partyName =r.employee.first_name +" "+r.employee.last_name
+                        date = r.payment_date
+                        ref = ''
+                        type = r.particular
+                        total = r.total_payment
+                        mIn = r.total_payment
+                        mOut = 0
+                        totMoneyIn += float(r.total_payment)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        }
+                        reportData.append(details)
+
+    
+                emploan = EmployeeLoan.objects.filter(company = comp_details, Loandate__range = [startDate, endDate])           
+                repay = EmployeeLoanRepayment.objects.filter(emp__in=emploan,company = comp_details,payment_date__range = [startDate, endDate],  particular='Additional Loan issued')           
+                if repay:            
+                    for r in repay:  
+                        partyName =r.employee.first_name +" "+r.employee.last_name
+                        date = r.payment_date
+                        ref = ''
+                        type = r.particular
+                        total = r.total_payment
+                        mIn = 0
+                        mOut = r.total_payment
+                        totMoneyOut += float(r.total_payment)
+
+                        details = {
+                            'date': date,
+                            'partyName': partyName,
+                            'ref':ref,
+                            'type':type,
+                            'total':total,
+                            'moneyIn':mIn,
+                            'moneyOut':mOut
+                        } 
+                        reportData.append(details)  
+                
             
             context = {
                 'log_details': log_details,
