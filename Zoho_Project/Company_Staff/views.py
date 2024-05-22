@@ -45335,3 +45335,302 @@ def shareDayBookReportToEmail(request):
 
 
 #---------------- Zoho Final Daybook - Ginto Shaji - End-------------------->
+
+#---------------- Zoho Final Loan Report - Ginto Shaji - Start-------------------->
+def LoanReport(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            comp_details = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            comp_details = StaffDetails.objects.get(login_details = log_details).company
+    
+    allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+    
+    reportData = []
+    totAmount = 0
+    totBalance = 0
+    
+    loan_acc = loan_account.objects.filter(company = comp_details)
+    if loan_acc:
+        for loan in loan_acc:
+                partyName = loan.bank_holder.customer_name
+                date = loan.loan_date
+                type = 'Loan Account'
+                total = loan.loan_amount
+                balance=loan.balance
+                totAmount += float(loan.loan_amount)
+                totBalance += float(loan.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+  
+    loan_acc = loan_account.objects.filter(company = comp_details)            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details, type='EMI paid')           
+    if repayment_details:            
+        for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                type = r.type
+                total = r.total_amount
+                balance=r.balance
+                totAmount += float(r.total_amount)
+                totBalance += float(r.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+                
+                
+    loan_acc = loan_account.objects.filter(company = comp_details)            
+    repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,type='Additional Loan')           
+    if repayment_details:            
+        for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                type = r.type
+                total = r.total_amount
+                balance=r.balance
+                totAmount += float(r.total_amount)
+                totBalance += float(r.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+            
+    return render(request, 'zohomodules/Reports/Loanreport.html', {               
+                'allmodules': allmodules,
+                'log_details': log_details,              
+                'companyName':comp_details.company_name,
+                'reportData':reportData,
+                'totAmount':totAmount,
+                'totBalance':totBalance,
+                'startDate':None, 
+                'endDate':None,          
+            })
+    
+    
+def LoanReportCustomized(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            comp_details = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            comp_details = StaffDetails.objects.get(login_details = log_details).company
+    
+    allmodules= ZohoModules.objects.get(company=comp_details,status='New')
+    
+    if request.method == 'GET':
+        startDate = request.GET['from_date']
+        endDate = request.GET['to_date']
+        if startDate == "":
+            startDate = None
+        if endDate == "":
+            endDate = None
+
+        reportData = []
+        totAmount = 0
+        totBalance = 0
+        
+        loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])
+        if loan_acc:
+            for loan in loan_acc:
+                partyName = loan.bank_holder.customer_name
+                date = loan.loan_date
+                type = 'Loan Account'
+                total = loan.loan_amount
+                balance=loan.balance
+                totAmount += float(loan.loan_amount)
+                totBalance += float(loan.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+  
+        loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+        repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details, payment_date__range = [startDate, endDate], type='EMI paid')           
+        if repayment_details:             
+            for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                type = r.type
+                total = r.total_amount
+                balance=r.balance
+                totAmount += float(r.total_amount)
+                totBalance += float(r.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+                             
+        loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+        repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate] , type='Additional Loan')           
+        if repayment_details:            
+            for r in repayment_details:
+                partyName =r.loan.bank_holder.customer_name
+                date = r.payment_date
+                type = r.type
+                total = r.total_amount
+                balance=r.balance
+                totAmount += float(r.total_amount)
+                totBalance += float(r.balance)
+                details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                reportData.append(details)
+    
+    return render(request, 'zohomodules/Reports/Loanreport.html', {               
+                'allmodules': allmodules,
+                'log_details': log_details,              
+                'companyName':comp_details.company_name,
+                'reportData':reportData,
+                'totAmount':totAmount,
+                'totBalance':totBalance,
+                'startDate':startDate, 
+                'endDate':endDate,              
+            })    
+ 
+        
+from datetime import datetime
+
+def shareLoanReportToEmail(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details = LoginDetails.objects.get(id=log_id)
+        
+        # Determine user type and fetch company details
+        if log_details.user_type == 'Company':
+            comp_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            comp_details = StaffDetails.objects.get(login_details=log_details).company
+
+        if request.method == 'POST':
+            # Extract email addresses and message from POST data
+            emails_string = request.POST['email_ids']
+            emails_list = [email.strip() for email in emails_string.split(',')]
+            email_message = request.POST['email_message']
+
+            # Extract date range from POST data
+            startDate = request.POST['start']
+            endDate = request.POST['end']
+            if startDate == "":
+                startDate = None
+            if endDate == "":
+                endDate = None
+
+            reportData = []
+            totAmount = 0
+            totBalance = 0
+            
+        if startDate == None or endDate == None:
+            
+            loan_acc = loan_account.objects.filter(company = comp_details)
+            if loan_acc:
+                for loan in loan_acc:
+                    partyName = loan.bank_holder.customer_name
+                    date = loan.loan_date
+                    type = 'Loan Account'
+                    total = loan.loan_amount
+                    balance=loan.balance
+                    totAmount += float(loan.loan_amount)
+                    totBalance += float(loan.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                    reportData.append(details)
+  
+            loan_acc = loan_account.objects.filter(company = comp_details)            
+            repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details, type='EMI paid')           
+            if repayment_details:            
+                for r in repayment_details:
+                    partyName =r.loan.bank_holder.customer_name
+                    date = r.payment_date
+                    type = r.type
+                    total = r.total_amount
+                    balance=r.balance
+                    totAmount += float(r.total_amount)
+                    totBalance += float(r.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                    reportData.append(details)
+                             
+            loan_acc = loan_account.objects.filter(company = comp_details)            
+            repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,type='Additional Loan')           
+            if repayment_details:            
+                for r in repayment_details:
+                    partyName =r.loan.bank_holder.customer_name
+                    date = r.payment_date
+                    type = r.type
+                    total = r.total_amount
+                    balance=r.balance
+                    totAmount += float(r.total_amount)
+                    totBalance += float(r.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}            
+                    reportData.append(details)
+        else:
+                
+            loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])
+            if loan_acc:
+                for loan in loan_acc:
+                    partyName = loan.bank_holder.customer_name
+                    date = loan.loan_date
+                    type = 'Loan Account'
+                    total = loan.loan_amount
+                    balance=loan.balance
+                    totAmount += float(loan.loan_amount)
+                    totBalance += float(loan.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                    reportData.append(details)
+  
+            loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+            repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details, payment_date__range = [startDate, endDate], type='EMI paid')           
+            if repayment_details:             
+                for r in repayment_details:
+                    partyName =r.loan.bank_holder.customer_name
+                    date = r.payment_date
+                    type = r.type
+                    total = r.total_amount
+                    balance=r.balance
+                    totAmount += float(r.total_amount)
+                    totBalance += float(r.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                    reportData.append(details)
+                             
+            loan_acc = loan_account.objects.filter(company = comp_details,loan_date__range = [startDate, endDate])            
+            repayment_details = LoanRepayemnt.objects.filter(loan__in=loan_acc, company = comp_details,payment_date__range = [startDate, endDate] , type='Additional Loan')           
+            if repayment_details:            
+                for r in repayment_details:
+                    partyName =r.loan.bank_holder.customer_name
+                    date = r.payment_date
+                    type = r.type
+                    total = r.total_amount
+                    balance=r.balance
+                    totAmount += float(r.total_amount)
+                    totBalance += float(r.balance)
+                    details = {'date': date,'partyName': partyName,'type':type,'total':total,'balance':balance}
+                    reportData.append(details)        
+        
+        
+        context = {
+                'log_details': log_details,
+                'companyName': comp_details.company_name,
+                'reportData': reportData,
+                'totAmount':totAmount,
+                'totBalance':totBalance,
+                'startDate': startDate,
+                'endDate': endDate,
+        }
+
+        template_path = 'zohomodules/Reports/LoanReport_Pdf.html'
+        template = get_template(template_path)
+
+        html = template.render(context)
+        result = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)                            
+        pdf = result.getvalue()
+        filename = 'Loan_Report'
+        subject = "Loan_Report"
+        email = EmailMsg(
+            subject,
+            f"Hi,\nPlease find the attached Report for - Loan Report. \n{email_message}\n\n--\nRegards,\n{comp_details.company_name}\n{comp_details.address}\n{comp_details.state} - {comp_details.country}\n{comp_details.contact}",
+            from_email=settings.EMAIL_HOST_USER,
+            to=emails_list
+        )
+            
+        email.from_email = settings.EMAIL_HOST_USER 
+        email.attach(filename, pdf, "application/pdf")
+        email.send(fail_silently=False)
+
+        # messages.success(request, 'Report has been shared via email successfully!')
+        return redirect(LoanReport)
+
+         
+#---------------- Zoho Final Loan Report - Ginto Shaji - End-------------------->

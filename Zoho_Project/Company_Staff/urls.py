@@ -937,6 +937,13 @@ urlpatterns = [
     path('shareDayBookReportToEmail', views.shareDayBookReportToEmail, name='shareDayBookReportToEmail'),
       
     #---------------- Zoho Final Daybook - Ginto Shaji - end-------------------->
+    
+    #---------------- Zoho Final LoanReport - Ginto Shaji - Start-------------------->
+    path('LoanReport', views.LoanReport, name='LoanReport'),
+    path('LoanReportCustomized', views.LoanReportCustomized, name='LoanReportCustomized'),
+    path('shareLoanReportToEmail', views.shareLoanReportToEmail, name='shareLoanReportToEmail'),
+    
+    #---------------- Zoho Final LoanReport - Ginto Shaji - end-------------------->
 
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 ]
