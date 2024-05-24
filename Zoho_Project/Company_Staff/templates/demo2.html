@@ -201,7 +201,7 @@
                                 <button class="btn btn-warning" onclick="toggleContent()"><i class="fas fa-gear"></i> Customize Report</button>
                                 <div id="contentDiv" class="content">
                                     <h6 style="color: white;">Customize Report</h6>
-                                    <form action="{% url 'PartyReportByItemCustomized' %}" class="form reportCustomizeForm" method="get" onsubmit="return validateForm()" >
+                                    <form action="{% url 'PartyReportByItemCustomized' %}" class="form reportCustomizeForm" method="get" >
                                         <div class="px-2">
                                             <label style="text-align:left ">From</label><br>
                                             <input style="color: white ;" name="from_date" class="inputdate form-control" type="date" id="startDate" value="{{startDate}}">
@@ -213,7 +213,7 @@
                                         <div class="px-2">
                                             <label style="text-align:left ">Item</label><br>
                                             <select name="item_details" style="color: white; background-color: rgb(19, 17, 17); " id="Items" class="form-control">
-                                                <option   value="0" selected>Select Item</option>
+                                                <option  value="0" selected>Select Item</option>
                                                 {% for i in items %}
                                                 <option  value="{{i.id}}">{{i.item_name}}</option>
                                                 {% endfor %}
@@ -371,7 +371,7 @@
                     <label for="item_unitname">Message(optional)</label>
                     <textarea name="email_message" id="email_message" class="form-control" cols="" rows="4" placeholder="This message will be sent along with Bill details."></textarea>
                 </div>
-                <input type="text" name="item_details" id="trans" hidden>
+                <input type="text" name="transaction" id="trans" hidden>
                 <input type="date" name="start" id="startDt" hidden>
                 <input type="date" name="end" id="endDt" hidden>
                 <div class="row mt-3">
@@ -410,7 +410,6 @@
                 // contentDiv.style.left = buttonRect.left + "px";
             }
         }
-
     
         $('#toggleEmailModal').on('click',function(){
             var st = $('#startDate').val();

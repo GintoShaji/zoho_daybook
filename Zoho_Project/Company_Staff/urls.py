@@ -947,6 +947,7 @@ urlpatterns = [
      #---------------- Zoho Final LoanReport - Ginto Shaji - Start-------------------->
     path('PartyReportByItem', views.PartyReportByItem, name='PartyReportByItem'),
     path('PartyReportByItemCustomized', views.PartyReportByItemCustomized, name='PartyReportByItemCustomized'),
+    path('sharePartyReportByItemToEmail', views.sharePartyReportByItemToEmail, name='sharePartyReportByItemToEmail'),
     
     
     #---------------- Zoho Final LoanReport - Ginto Shaji - end-------------------->
