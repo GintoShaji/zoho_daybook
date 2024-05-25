@@ -45876,8 +45876,6 @@ def PartyReportByItemCustomized(request):
 
 
 
-from datetime import datetime
-
 def sharePartyReportByItemToEmail(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -45903,187 +45901,185 @@ def sharePartyReportByItemToEmail(request):
                 startDate = None
             if endDate == "":
                 endDate = None
-            if itm != "0":
-                item = Items.objects.get(id = itm)
-            else:
-                messages.warning(request, 'Select an item and share report.!')
-                return redirect(PartyReportByItem)
-                
-            if item:
-                itemId = item.id
-                itemName = item.item_name
+            
+            item_query = Items.objects.filter(company=comp_details)
+            
+            if item_query.exists():
+                itemName = item_query.first().item_name
             else:
                 itemName = None
-                itemId = None
 
-            items =Items.objects.filter(company = comp_details)
-            cust = Customer.objects.filter(company = comp_details)
-            vend = Vendor.objects.filter(company = comp_details)
+            cust = Customer.objects.filter(company=comp_details)
+            vend = Vendor.objects.filter(company=comp_details)
+            
+            reportData = []
+            totSales = 0
+            totPurchase = 0
             
             if startDate is None or endDate is None:
-                reportData = []
-                totSales = 0
-                totPurchase = 0
-                
-                for c in cust:
-                    sales = 0
-                    name = c.first_name+' '+c.last_name
-                    sAmt = item.selling_price
-                    pAmt = item.purchase_price
-                    
-                    sordr= SaleOrder.objects.filter(company = comp_details, customer = c)
-                    for s in sordr:
-                        soItems = SalesOrderItems.objects.filter(sales_order= s, item = item)
-                        for it in soItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                if item_query.exists():
+                    for c in cust:
+                        sales = 0
+                        name = f"{c.first_name} {c.last_name}"
                         
-                    inv = invoice.objects.filter(company = comp_details, customer = c)
-                    for iv in inv:
-                        invItems = invoiceitems.objects.filter(invoice = iv, Items = item)
-                        for it in invItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                        for item in item_query:
+                            sAmt = item.selling_price
+                            pAmt = item.purchase_price
                             
-                    recInv = RecurringInvoice.objects.filter(company = comp_details, customer = c)
-                    for rec in recInv:
-                        recItems = Reccurring_Invoice_item.objects.filter(reccuring_invoice= rec, item = item)
-                        for it in recItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
-                            
-                    rtInv = RetainerInvoice.objects.filter(company = comp_details, customer_name = c)
-                    for rt in rtInv:
-                        rtItems = Retaineritems.objects.filter(retainer = rt, item = item)
-                        for it in rtItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                            sordr = SaleOrder.objects.filter(company=comp_details, customer=c)
+                            for s in sordr:
+                                soItems = SalesOrderItems.objects.filter(sales_order=s, item=item)
+                                for it in soItems:
+                                    sales += int(it.quantity)
+                                    totSales += int(it.quantity)
+                                
+                            inv = invoice.objects.filter(company=comp_details, customer=c)
+                            for iv in inv:
+                                invItems = invoiceitems.objects.filter(invoice=iv, item=item)
+                                for it in invItems:
+                                    sales += int(it.quantity)
+                                    totSales += int(it.quantity)
+                                    
+                            recInv = RecurringInvoice.objects.filter(company=comp_details, customer=c)
+                            for rec in recInv:
+                                recItems = Reccurring_Invoice_item.objects.filter(recurring_invoice=rec, item=item)
+                                for it in recItems:
+                                    sales += int(it.quantity)
+                                    totSales += int(it.quantity)
+                                    
+                            rtInv = RetainerInvoice.objects.filter(company=comp_details, customer_name=c)
+                            for rt in rtInv:
+                                rtItems = Retaineritems.objects.filter(retainer=rt, item=item)
+                                for it in rtItems:
+                                    sales += int(it.quantity)
+                                    totSales += int(it.quantity)
+                    
+                        det = {
+                           'name': name,
+                           'salesQty': sales,
+                           'sAmount': sAmt,
+                           'pAmount': pAmt,
+                           'purchaseQty': 0
+                        }
+                        reportData.append(det)
                 
-                    det = {
-                       'name': name,
-                       'salesQty':sales,
-                       'sAmount':sAmt,
-                       'pAmount':pAmt,
-                       'purchaseQty': 0
-                    }
-                    reportData.append(det)
-            
-                for v in vend:
-                    purchase = 0
-                    name = v.title+' '+v.first_name+' '+v.last_name
-                    sAmt = item.selling_price
-                    pAmt = item.purchase_price
+                    for v in vend:
+                        purchase = 0
+                        name = f"{v.title} {v.first_name} {v.last_name}"
+                        
+                        for item in item_query:
+                            sAmt = item.selling_price
+                            pAmt = item.purchase_price
 
-                    pordr= PurchaseOrder.objects.filter(company = comp_details, vendor = v)
-                    for p in pordr:
-                        poItems = PurchaseOrderItems.objects.filter(purchase_order = p, item = item)
-                        for it in poItems:
-                            purchase += int(it.quantity)
-                            totPurchase += int(it.quantity)
-                    
-                    bill= Bill.objects.filter(Company = comp_details, Vendor = v)
-                    for b in bill:
-                        billItems = BillItems.objects.filter(Bills = b, item_id = item)
-                        for it in billItems:
-                            purchase += int(it.qty)
-                            totPurchase += int(it.qty)
-        
-                    rcrbl= Recurring_bills.objects.filter(company = comp_details, vendor_details = v)
-                    for rc in rcrbl:
-                        rcItems = RecurrItemsList.objects.filter(recurr_bill_id = rc, item_id = item)
-                        for it in rcItems:
-                            purchase += int(it.qty)
-                            totPurchase += int(it.qty)
-                         
-                    det = {
-                        'name': name,
-                        'salesQty': 0,
-                        'sAmount':sAmt,
-                        'pAmount':pAmt,
-                        'purchaseQty': purchase
-                    }
-                    reportData.append(det)
-        
-            else:
-                reportData = []
-                totSales = 0
-                totPurchase = 0
+                            pordr = PurchaseOrder.objects.filter(company=comp_details, vendor=v)
+                            for p in pordr:
+                                poItems = PurchaseOrderItems.objects.filter(purchase_order=p, item=item)
+                                for it in poItems:
+                                    purchase += int(it.quantity)
+                                    totPurchase += int(it.quantity)
+                            
+                            bill = Bill.objects.filter(Company_id=comp_details, Vendor=v)
+                            for b in bill:
+                                billItems = BillItems.objects.filter(Bills=b, item_id=item)
+                                for it in billItems:
+                                    purchase += int(it.qty)
+                                    totPurchase += int(it.qty)
                 
+                            rcrbl = Recurring_bills.objects.filter(company=comp_details, vendor_details=v)
+                            for rc in rcrbl:
+                                rcItems = RecurrItemsList.objects.filter(recurring_bill_id=rc, item=item)
+                                for it in rcItems:
+                                    purchase += int(it.qty)
+                                    totPurchase += int(it.qty)
+                             
+                        det = {
+                            'name': name,
+                            'salesQty': 0,
+                            'sAmount': sAmt,
+                            'pAmount': pAmt,
+                            'purchaseQty': purchase
+                        }
+                        reportData.append(det)
+            else:
                 for c in cust:
                     sales = 0
-                    name = c.first_name+' '+c.last_name
-                    sAmt = item.selling_price
-                    pAmt = item.purchase_price
+                    name = f"{c.first_name} {c.last_name}"
                     
-                    sordr= SaleOrder.objects.filter(company = comp_details, customer = c,sales_order_date__range=[startDate, endDate])
-                    for s in sordr:
-                        soItems = SalesOrderItems.objects.filter(sales_order= s, item = item)
-                        for it in soItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                    for item in item_query:
+                        sAmt = item.selling_price
+                        pAmt = item.purchase_price
                         
-                    inv = invoice.objects.filter(company = comp_details, customer = c,date__range=[startDate, endDate])
-                    for iv in inv:
-                        invItems = invoiceitems.objects.filter(invoice = iv, Items = item)
-                        for it in invItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                        sordr = SaleOrder.objects.filter(company=comp_details, customer=c, sales_order_date__range=[startDate, endDate])
+                        for s in sordr:
+                            soItems = SalesOrderItems.objects.filter(sales_order=s, item=item)
+                            for it in soItems:
+                                sales += int(it.quantity)
+                                totSales += int(it.quantity)
                             
-                    recInv = RecurringInvoice.objects.filter(company = comp_details, customer = c,start_date__range=[startDate, endDate])
-                    for rec in recInv:
-                        recItems = Reccurring_Invoice_item.objects.filter(reccuring_invoice= rec, item = item)
-                        for it in recItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
-                            
-                    rtInv = RetainerInvoice.objects.filter(company = comp_details, customer_name = c,created_at__range=[startDate, endDate])
-                    for rt in rtInv:
-                        rtItems = Retaineritems.objects.filter(retainer = rt, item = item)
-                        for it in rtItems:
-                            sales += int(it.quantity)
-                            totSales += int(it.quantity)
+                        inv = invoice.objects.filter(company=comp_details, customer=c, date__range=[startDate, endDate])
+                        for iv in inv:
+                            invItems = invoiceitems.objects.filter(invoice=iv, item=item)
+                            for it in invItems:
+                                sales += int(it.quantity)
+                                totSales += int(it.quantity)
+                                
+                        recInv = RecurringInvoice.objects.filter(company=comp_details, customer=c, start_date__range=[startDate, endDate])
+                        for rec in recInv:
+                            recItems = Reccurring_Invoice_item.objects.filter(recurring_invoice=rec, item=item)
+                            for it in recItems:
+                                sales += int(it.quantity)
+                                totSales += int(it.quantity)
+                                
+                        rtInv = RetainerInvoice.objects.filter(company=comp_details, customer_name=c, created_at__range=[startDate, endDate])
+                        for rt in rtInv:
+                            rtItems = Retaineritems.objects.filter(retainer=rt, item=item)
+                            for it in rtItems:
+                                sales += int(it.quantity)
+                                totSales += int(it.quantity)
                 
                     det = {
                         'name': name,
-                        'salesQty':sales,
-                        'sAmount':sAmt,
-                        'pAmount':pAmt,
+                        'salesQty': sales,
+                        'sAmount': sAmt,
+                        'pAmount': pAmt,
                         'purchaseQty': 0
                     }
                     reportData.append(det)
                     
                 for v in vend:
                     purchase = 0
-                    name = v.first_name+' '+v.last_name
-                    sAmt = item.selling_price
-                    pAmt = item.purchase_price
+                    name = f"{v.first_name} {v.last_name}"
                     
-                    pordr= PurchaseOrder.objects.filter(company = comp_details, vendor = v,purchase_order_date__range=[startDate, endDate])
-                    for p in pordr:
-                        poItems = PurchaseOrderItems.objects.filter(purchase_order = p, item = item)
-                        for it in poItems:
-                            purchase += int(it.quantity)
-                            totPurchase += int(it.quantity)
-                    
-                    bill= Bill.objects.filter(Company = comp_details, Vendor = v,Bill_Date__range=[startDate, endDate])
-                    for b in bill:
-                        billItems = BillItems.objects.filter(Bills = b, item_id = item)
-                        for it in billItems:
-                            purchase += int(it.qty)
-                            totPurchase += int(it.qty)
-        
-                    rcrbl= Recurring_bills.objects.filter(company = comp_details, vendor_details = v,rec_bill_date__range=[startDate, endDate])
-                    for rc in rcrbl:
-                       rcItems = RecurrItemsList.objects.filter(recurr_bill_id = rc, item_id = item)
-                       for it in rcItems:
-                           purchase += int(it.qty)
-                           totPurchase += int(it.qty)
-                         
+                    for item in item_query:
+                        sAmt = item.selling_price
+                        pAmt = item.purchase_price
+                        
+                        pordr = PurchaseOrder.objects.filter(company=comp_details, vendor=v, purchase_order_date__range=[startDate, endDate])
+                        for p in pordr:
+                            poItems = PurchaseOrderItems.objects.filter(purchase_order=p, item=item)
+                            for it in poItems:
+                                purchase += int(it.quantity)
+                                totPurchase += int(it.quantity)
+                        
+                        bill = Bill.objects.filter(Company_id=comp_details, Vendor=v, Bill_Date__range=[startDate, endDate])
+                        for b in bill:
+                            billItems = BillItems.objects.filter(Bills=b, item_id=item)
+                            for it in billItems:
+                                purchase += int(it.qty)
+                                totPurchase += int(it.qty)
+            
+                        rcrbl = Recurring_bills.objects.filter(company=comp_details, vendor_details=v, rec_bill_date__range=[startDate, endDate])
+                        for rc in rcrbl:
+                           rcItems = RecurrItemsList.objects.filter(recurring_bill_id=rc, item=item)
+                           for it in rcItems:
+                               purchase += int(it.qty)
+                               totPurchase += int(it.qty)
+                             
                     det = {
                         'name': name,
                         'salesQty': 0,
-                        'sAmount':sAmt,
-                        'pAmount':pAmt,
+                        'sAmount': sAmt,
+                        'pAmount': pAmt,
                         'purchaseQty': purchase
                     }
                     reportData.append(det)
@@ -46092,10 +46088,10 @@ def sharePartyReportByItemToEmail(request):
                 'log_details': log_details,
                 'companyName': comp_details.company_name,
                 'reportData': reportData,
-                'totalSales':totSales,
-                'totalPurchase':totPurchase,
-                'startDate':startDate,
-                'endDate':endDate, 
+                'totalSales': totSales,
+                'totalPurchase': totPurchase,
+                'startDate': startDate,
+                'endDate': endDate, 
                 'itemName': itemName
         }
 
@@ -46119,19 +46115,11 @@ def sharePartyReportByItemToEmail(request):
         email.attach(filename, pdf, "application/pdf")
         email.send(fail_silently=False)
 
-        # messages.success(request, 'Report has been shared via email successfully!')
-        return redirect(PartyReportByItem)
+        return redirect('PartyReportByItem')
 
 
 
-
-
-
-
-
-
-
-
-
+    
+    
 
 #---------------- Zoho Final Party Report by item - Ginto Shaji - End-------------------->
